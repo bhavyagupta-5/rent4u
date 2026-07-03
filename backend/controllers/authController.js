@@ -171,11 +171,9 @@ exports.forgotPassword = async (req, res) => {
     console.log(`Password reset link (Stateless JWT): ${resetUrl}`);
 
     const emailService = require('../services/emailService');
-    try {
-      await emailService.sendPasswordResetEmail(user.email, user.name, resetUrl);
-    } catch (mailErr) {
-      console.error("Nodemailer failed in forgotPassword:", mailErr.message);
-    }
+    emailService.sendPasswordResetEmail(user.email, user.name, resetUrl).catch(mailErr => {
+      console.error("Nodemailer failed in forgotPassword (background):", mailErr.message);
+    });
     
     res.status(200).json({
       success: true,

@@ -39,17 +39,16 @@ exports.sendInterest = async (req, res) => {
     const scoreVal = scoreObj ? scoreObj.score : 'N/A';
 
     
-    try {
-      await emailService.sendInterestReceivedEmail(
-        listing.owner.email,
-        listing.owner.name,
-        req.user.name,
-        listing.title,
-        scoreVal
-      );
-    } catch (mailError) {
-      console.error("Nodemailer failed in sendInterest (ignored to avoid blocking transaction):", mailError.message);
-    }
+    // Send email asynchronously in the background so it doesn't block the API response
+    emailService.sendInterestReceivedEmail(
+      listing.owner.email,
+      listing.owner.name,
+      req.user.name,
+      listing.title,
+      scoreVal
+    ).catch(mailError => {
+      console.error("Nodemailer failed in sendInterest (background):", mailError.message);
+    });
 
     res.status(201).json({ success: true, data: interest });
   } catch (err) {
@@ -73,7 +72,6 @@ exports.updateInterestStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Interest entry not found' });
     }
 
-    
     if (interest.owner._id.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized to change interest status' });
     }
@@ -82,7 +80,6 @@ exports.updateInterestStatus = async (req, res) => {
     await interest.save();
 
     if (status === 'accepted') {
-      
       const existingConv = await Conversation.findOne({
         participants: { $all: [interest.tenant._id, interest.owner._id] },
         listing: interest.listing._id
@@ -95,29 +92,23 @@ exports.updateInterestStatus = async (req, res) => {
         });
       }
 
-      
-      try {
-        await emailService.sendInterestAcceptedEmail(
-          interest.tenant.email,
-          interest.tenant.name,
-          interest.owner.name,
-          interest.owner.phone,
-          interest.listing.title
-        );
-      } catch (mailErr) {
-        console.error("Mail dispatch failed in updateInterestStatus (accepted):", mailErr.message);
-      }
+      emailService.sendInterestAcceptedEmail(
+        interest.tenant.email,
+        interest.tenant.name,
+        interest.owner.name,
+        interest.owner.phone,
+        interest.listing.title
+      ).catch(mailErr => {
+        console.error("Mail dispatch failed in updateInterestStatus (accepted background):", mailErr.message);
+      });
     } else if (status === 'declined') {
-      
-      try {
-        await emailService.sendInterestDeclinedEmail(
-          interest.tenant.email,
-          interest.tenant.name,
-          interest.listing.title
-        );
-      } catch (mailErr) {
-        console.error("Mail dispatch failed in updateInterestStatus (declined):", mailErr.message);
-      }
+      emailService.sendInterestDeclinedEmail(
+        interest.tenant.email,
+        interest.tenant.name,
+        interest.listing.title
+      ).catch(mailErr => {
+        console.error("Mail dispatch failed in updateInterestStatus (declined background):", mailErr.message);
+      });
     }
 
     res.status(200).json({ success: true, data: interest });
