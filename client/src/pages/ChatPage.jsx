@@ -3,6 +3,7 @@ import { api, useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { Send, MapPin, Check, CheckCheck, Loader2, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
+import UserAvatar from '../components/Common/UserAvatar';
 
 const ChatPage = () => {
   const { user } = useAuth();
@@ -191,10 +192,10 @@ const ChatPage = () => {
                   }`}
                 >
                   <div className="relative shrink-0">
-                    <img 
-                      src={other?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150"} 
-                      alt="avatar" 
-                      className="h-10 w-10 rounded-xl object-cover"
+                    <UserAvatar 
+                      name={other?.name}
+                      avatar={other?.avatar} 
+                      className="h-10 w-10 rounded-xl"
                     />
                     {isOnline && (
                       <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"></span>
@@ -228,10 +229,10 @@ const ChatPage = () => {
             {}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md flex items-center justify-between text-left">
               <div className="flex items-center gap-3">
-                <img 
-                  src={partner?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150"} 
-                  alt="Avatar" 
-                  className="h-9 w-9 rounded-xl object-cover"
+                <UserAvatar 
+                  name={partner?.name}
+                  avatar={partner?.avatar} 
+                  className="h-9 w-9 rounded-xl"
                 />
                 <div>
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white">{partner?.name}</h4>
@@ -268,10 +269,10 @@ const ChatPage = () => {
                       key={msg._id} 
                       className={`flex gap-3 max-w-[70%] text-left ${isMe ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
                     >
-                      <img 
-                        src={msg.sender.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150"} 
-                        alt="avatar" 
-                        className="h-7 w-7 rounded-lg object-cover shrink-0 mt-0.5"
+                      <UserAvatar 
+                        name={msg.sender.name}
+                        avatar={msg.sender.avatar} 
+                        className="h-7 w-7 rounded-lg shrink-0 mt-0.5"
                       />
                       <div className="space-y-1">
                         <div className={`p-3 rounded-2xl text-xs leading-relaxed ${

@@ -166,14 +166,20 @@ exports.forgotPassword = async (req, res) => {
     });
 
     
-    const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/reset/${resetToken}`;
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
     console.log(`Password reset link (Stateless JWT): ${resetUrl}`);
 
-    
+    const emailService = require('../services/emailService');
+    try {
+      await emailService.sendPasswordResetEmail(user.email, user.name, resetUrl);
+    } catch (mailErr) {
+      console.error("Nodemailer failed in forgotPassword:", mailErr.message);
+    }
     
     res.status(200).json({
       success: true,
-      message: 'Email sent with reset link (logged in server console)',
+      message: 'Password reset link sent to your email address.',
       resetToken 
     });
   } catch (err) {
@@ -226,11 +232,19 @@ exports.updateProfile = async (req, res) => {
   try {
     const { name, phone, avatar, ...profileDetails } = req.body;
 
-    
     const user = await User.findById(req.user.id);
     if (name) user.name = name;
     if (phone) user.phone = phone;
-    if (avatar) user.avatar = avatar;
+
+    let avatarUrl = avatar;
+    if (req.file) {
+      const { uploadToCloudinary } = require('../middleware/uploadMiddleware');
+      avatarUrl = await uploadToCloudinary(req.file.buffer, 'avatars');
+    }
+
+    if (avatarUrl !== undefined) {
+      user.avatar = avatarUrl;
+    }
     await user.save();
 
     let tenantProfile = null;

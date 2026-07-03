@@ -15,6 +15,7 @@ import {
   Heart
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import UserAvatar from '../components/Common/UserAvatar';
 
 const ListingDetails = () => {
   const { id } = useParams();
@@ -288,10 +289,10 @@ const ListingDetails = () => {
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Property Owner</h3>
             
             <div className="flex items-center gap-3">
-              <img 
-                src={room.owner?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150"} 
-                alt="Owner avatar" 
-                className="h-11 w-11 rounded-xl object-cover ring-2 ring-primary-500/10"
+              <UserAvatar 
+                name={room.owner?.name}
+                avatar={room.owner?.avatar}
+                className="h-11 w-11 rounded-xl ring-2 ring-primary-500/10"
               />
               <div className="text-left flex-1 min-w-0">
                 <div className="flex items-center gap-1">

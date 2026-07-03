@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { User, Phone, MapPin, DollarSign, Calendar, FileText, CheckCircle, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../context/AuthContext';
+import UserAvatar from '../components/Common/UserAvatar';
 
 const Profile = () => {
   const { user, tenantProfile, updateProfile, refreshUser } = useAuth();
@@ -11,6 +12,43 @@ const Profile = () => {
   const [verifying, setVerifying] = useState(false);
   const [idUploaded, setIdUploaded] = useState(false);
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const toastId = toast.loading('Uploading profile photo...');
+    try {
+      const uploadData = new FormData();
+      uploadData.append('avatarFile', file);
+
+      const res = await api.put('/auth/profile', uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (res.data.success) {
+        setValue('avatar', res.data.user.avatar);
+        toast.success('Profile photo updated successfully!', { id: toastId });
+        if (refreshUser) await refreshUser();
+      }
+    } catch (err) {
+      toast.error('Failed to upload profile photo.', { id: toastId });
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    const toastId = toast.loading('Removing profile photo...');
+    try {
+      const res = await api.put('/auth/profile', { avatar: '' });
+      if (res.data.success) {
+        setValue('avatar', '');
+        toast.success('Profile photo removed.', { id: toastId });
+        if (refreshUser) await refreshUser();
+      }
+    } catch (err) {
+      toast.error('Failed to remove profile photo.', { id: toastId });
+    }
+  };
 
   const handleVerify = async () => {
     if (!idUploaded) {
@@ -77,10 +115,45 @@ const Profile = () => {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md">
         
-        {}
         <div className="space-y-4">
           <h3 className="text-sm font-bold flex items-center gap-1.5"><User size={15} className="text-primary-500" /> General Info</h3>
           
+          <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800">
+            <UserAvatar
+              name={user?.name}
+              avatar={user?.avatar}
+              className="h-16 w-16 rounded-2xl text-xl ring-4 ring-primary-500/10"
+            />
+            <div className="text-center sm:text-left space-y-1">
+              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Profile Picture</h4>
+              <p className="text-[10px] text-slate-400">Upload a JPG or PNG image. Max 5MB.</p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+                id="avatar-upload-file"
+              />
+              <div className="flex gap-2 mt-2 justify-center sm:justify-start">
+                <label
+                  htmlFor="avatar-upload-file"
+                  className="px-3 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all inline-block"
+                >
+                  Upload Photo
+                </label>
+                {user?.avatar && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-red-500/10 hover:text-red-500 text-slate-600 dark:text-slate-400 rounded-lg text-[10px] font-bold transition-all"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
@@ -99,16 +172,6 @@ const Profile = () => {
                 {...register('phone')}
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Avatar Image URL</label>
-            <input
-              type="text"
-              placeholder="https://example.com/avatar.jpg"
-              className="w-full glass-input text-sm text-slate-900 dark:text-slate-100"
-              {...register('avatar')}
-            />
           </div>
         </div>
 

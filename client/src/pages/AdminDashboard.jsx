@@ -23,6 +23,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import toast from 'react-hot-toast';
+import UserAvatar from '../components/Common/UserAvatar';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -238,7 +239,11 @@ const AdminDashboard = () => {
                       <tr key={u._id}>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <img src={u.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150"} alt="avatar" className="h-8 w-8 rounded-lg object-cover" />
+                            <UserAvatar 
+                               name={u.name}
+                               avatar={u.avatar} 
+                               className="h-8 w-8 rounded-lg"
+                             />
                             <div className="text-left">
                               <p className="text-xs font-bold text-slate-900 dark:text-white">{u.name}</p>
                               <p className="text-[10px] text-slate-400 mt-0.5">{u.email}</p>

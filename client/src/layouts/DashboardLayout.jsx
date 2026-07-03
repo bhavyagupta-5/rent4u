@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { ThemeContext } from '../context/ThemeContext';
+import UserAvatar from '../components/Common/UserAvatar';
 import { 
   LayoutDashboard, 
   Search, 
@@ -134,10 +135,10 @@ const DashboardLayout = () => {
         {}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <img 
-              src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150"} 
-              alt="avatar" 
-              className="h-10 w-10 rounded-xl object-cover ring-2 ring-primary-500/20"
+            <UserAvatar 
+              name={user?.name}
+              avatar={user?.avatar} 
+              className="h-10 w-10 rounded-xl ring-2 ring-primary-500/20"
             />
             <div className="truncate">
               <p className="text-sm font-semibold dark:text-slate-100 truncate">{user?.name}</p>
@@ -235,11 +236,11 @@ const DashboardLayout = () => {
 
             {}
             <Link to="/profile" className="flex items-center gap-2">
-              <img 
-                src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150"} 
-                alt="Profile Avatar" 
-                className="h-9 w-9 rounded-xl object-cover ring-2 ring-primary-500/10 hover:ring-primary-500/30 transition-all"
-              />
+            <UserAvatar 
+              name={user?.name}
+              avatar={user?.avatar} 
+              className="h-9 w-9 rounded-xl ring-2 ring-primary-500/10 hover:ring-primary-500/30 transition-all"
+            />
             </Link>
           </div>
         </header>

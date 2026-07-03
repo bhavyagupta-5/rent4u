@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../context/AuthContext';
-import { ArrowLeft, Upload, X, Home, Info, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Upload, X, Home, Info, ShieldAlert, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CreateListing = () => {
@@ -11,6 +11,11 @@ const CreateListing = () => {
   const [generatingDesc, setGeneratingDesc] = useState(false);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
 
   const handleImageChange = (e) => {
@@ -81,6 +86,106 @@ const CreateListing = () => {
     }
   };
 
+  useEffect(() => {
+    register('latitude', { required: 'Latitude coordinates are required' });
+    register('longitude', { required: 'Longitude coordinates are required' });
+
+    setValue('latitude', 28.6139);
+    setValue('longitude', 77.2090);
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.async = true;
+    script.onload = () => {
+      if (!window.L) return;
+
+      const defaultLat = 28.6139;
+      const defaultLng = 77.2090;
+
+      const map = window.L.map('map-picker').setView([defaultLat, defaultLng], 12);
+      mapRef.current = map;
+
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      const marker = window.L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+      markerRef.current = marker;
+
+      const reverseGeocode = (latVal, lngVal) => {
+        setValue('latitude', latVal);
+        setValue('longitude', lngVal);
+
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latVal}&lon=${lngVal}`)
+          .then(res => res.json())
+          .then(resData => {
+            if (resData) {
+              setValue('location', resData.display_name || '');
+              const city = resData.address?.city || resData.address?.town || resData.address?.suburb || resData.address?.county || '';
+              const state = resData.address?.state || '';
+              setValue('city', city);
+              setValue('state', state);
+            }
+          })
+          .catch(err => console.warn("Reverse geocode error:", err));
+      };
+
+      marker.on('dragend', () => {
+        const pos = marker.getLatLng();
+        reverseGeocode(pos.lat, pos.lng);
+      });
+
+      map.on('click', (e) => {
+        marker.setLatLng(e.latlng);
+        reverseGeocode(e.latlng.lat, e.latlng.lng);
+      });
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      try {
+        document.head.removeChild(link);
+        document.head.removeChild(script);
+      } catch (e) {}
+    };
+  }, [register]);
+
+  const handleMapSearch = async () => {
+    if (!searchQuery) return;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+      const searchData = await res.json();
+      if (searchData && searchData.length > 0) {
+        const match = searchData[0];
+        const searchLat = parseFloat(match.lat);
+        const searchLng = parseFloat(match.lon);
+
+        setValue('latitude', searchLat);
+        setValue('longitude', searchLng);
+        setValue('location', match.display_name);
+
+        const city = match.address?.city || match.address?.town || match.address?.suburb || '';
+        const state = match.address?.state || '';
+        if (city) setValue('city', city);
+        if (state) setValue('state', state);
+
+        if (mapRef.current && markerRef.current) {
+          mapRef.current.setView([searchLat, searchLng], 14);
+          markerRef.current.setLatLng([searchLat, searchLng]);
+        }
+      } else {
+        toast.error("Location not found. Try spelling changes.");
+      }
+    } catch (err) {
+      toast.error("Search request failed.");
+    }
+  };
+
   const onSubmit = async (data) => {
     try {
       setSubmitting(true);
@@ -96,6 +201,8 @@ const CreateListing = () => {
       formData.append('availableFrom', data.availableFrom);
       formData.append('roomType', data.roomType);
       formData.append('furnishing', data.furnishing);
+      formData.append('latitude', data.latitude);
+      formData.append('longitude', data.longitude);
       
       
       const selectedAmenities = [];
@@ -202,10 +309,38 @@ const CreateListing = () => {
           </div>
         </div>
 
-        {}
+        {/* Geolocation Map Pin Picker */}
         <div className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4">
           <h3 className="text-sm font-bold flex items-center gap-1.5"><Home size={14} className="text-primary-500" /> Location Details</h3>
           
+          <div className="space-y-3">
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Select Location on Map</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search location to position map pin..."
+                className="flex-1 glass-input text-sm text-slate-900 dark:text-slate-100"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleMapSearch())}
+              />
+              <button
+                type="button"
+                onClick={handleMapSearch}
+                className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0"
+              >
+                Search Map
+              </button>
+            </div>
+            
+            <div 
+              id="map-picker" 
+              style={{ height: '240px' }} 
+              className="w-full rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 overflow-hidden relative z-0"
+            ></div>
+            <p className="text-[10px] text-slate-400 flex items-center gap-1"><MapPin size={10} /> Drag the pin or click on the map to accurately place your room's coordinates.</p>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Street Address</label>
             <input

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, useAuth } from '../context/AuthContext';
 import { Home, FileText, Check, X, Sparkles, Plus, Trash2, Edit, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import UserAvatar from '../components/Common/UserAvatar';
 
 const OwnerDashboard = () => {
   const { user } = useAuth();
@@ -185,10 +186,10 @@ const OwnerDashboard = () => {
                   {/* Tenant user info card */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <img 
-                        src={interest.tenant.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150"} 
-                        alt="Tenant"
-                        className="h-9 w-9 rounded-xl object-cover"
+                      <UserAvatar 
+                        name={interest.tenant.name}
+                        avatar={interest.tenant.avatar} 
+                        className="h-9 w-9 rounded-xl"
                       />
                       <div className="text-left">
                         <h4 className="font-bold text-xs text-slate-900 dark:text-white">{interest.tenant.name}</h4>

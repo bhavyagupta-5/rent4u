@@ -20,8 +20,10 @@ router.post('/refresh', refresh);
 router.post('/forgot', forgotPassword);
 router.post('/reset/:token', resetPassword);
 
+const { upload } = require('../middleware/uploadMiddleware');
+
 router.get('/me', protect, getMe);
-router.put('/profile', protect, updateProfile);
+router.put('/profile', protect, upload.single('avatarFile'), updateProfile);
 router.post('/verify', protect, verifyUser);
 
 module.exports = router;

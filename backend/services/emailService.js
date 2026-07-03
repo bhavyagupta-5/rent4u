@@ -108,8 +108,34 @@ async function sendInterestDeclinedEmail(tenantEmail, tenantName, listingTitle) 
   });
 }
 
+async function sendPasswordResetEmail(userEmail, userName, resetUrl) {
+  const transporter = getTransporter();
+  const htmlContent = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded-lg: 8px;">
+      <h2 style="color: #6366f1; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Reset Your Password</h2>
+      <p>Hi ${userName},</p>
+      <p>You requested to reset your password on RentHour AI. Click the link below to set a new password. This link is valid for 10 minutes:</p>
+      <div style="margin: 24px 0; text-align: center;">
+        <a href="${resetUrl}" style="background-color: #e65a0f; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Reset Password</a>
+      </div>
+      <p style="word-break: break-all; color: #4b5563; font-size: 13px;">If you're having trouble clicking the button, copy and paste this URL into your browser: <br/> ${resetUrl}</p>
+      <br />
+      <hr style="border: 0; border-top: 1px solid #e2e8f0;" />
+      <p style="font-size: 12px; color: #9ca3af;">If you did not request a password reset, you can safely ignore this email.</p>
+    </div>
+  `;
+
+  return await transporter.sendMail({
+    from: `"RentHour AI" <${process.env.EMAIL_USER || 'no-reply@renthour-ai.com'}>`,
+    to: userEmail,
+    subject: `RentHour AI: Reset Your Password`,
+    html: htmlContent,
+  });
+}
+
 module.exports = {
   sendInterestReceivedEmail,
   sendInterestAcceptedEmail,
   sendInterestDeclinedEmail,
+  sendPasswordResetEmail,
 };
