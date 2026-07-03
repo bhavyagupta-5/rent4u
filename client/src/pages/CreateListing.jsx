@@ -93,70 +93,225 @@ const CreateListing = () => {
     setValue('latitude', 28.6139);
     setValue('longitude', 77.2090);
 
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    document.head.appendChild(link);
+    const googleMapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.async = true;
-    script.onload = () => {
-      if (!window.L) return;
+    if (googleMapsKey && googleMapsKey.trim() !== '') {
+      // 1. Google Maps Load Path
+      const scriptId = 'google-maps-script';
+      let script = document.getElementById(scriptId);
+      
+      const initGoogleMap = () => {
+        if (!window.google) return;
+        const defaultLat = 28.6139;
+        const defaultLng = 77.2090;
 
-      const defaultLat = 28.6139;
-      const defaultLng = 77.2090;
+        const map = new window.google.maps.Map(document.getElementById('map-picker'), {
+          center: { lat: defaultLat, lng: defaultLng },
+          zoom: 12,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false
+        });
+        mapRef.current = map;
 
-      const map = window.L.map('map-picker').setView([defaultLat, defaultLng], 12);
-      mapRef.current = map;
+        const marker = new window.google.maps.Marker({
+          position: { lat: defaultLat, lng: defaultLng },
+          map: map,
+          draggable: true
+        });
+        markerRef.current = marker;
 
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+        const handleGoogleGeocode = (latitude, longitude) => {
+          setValue('latitude', latitude);
+          setValue('longitude', longitude);
 
-      const marker = window.L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
-      markerRef.current = marker;
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              setValue('location', results[0].formatted_address);
 
-      const reverseGeocode = (latVal, lngVal) => {
-        setValue('latitude', latVal);
-        setValue('longitude', lngVal);
-
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latVal}&lon=${lngVal}`)
-          .then(res => res.json())
-          .then(resData => {
-            if (resData) {
-              setValue('location', resData.display_name || '');
-              const city = resData.address?.city || resData.address?.town || resData.address?.suburb || resData.address?.county || '';
-              const state = resData.address?.state || '';
-              setValue('city', city);
-              setValue('state', state);
+              let city = '';
+              let state = '';
+              results[0].address_components.forEach(comp => {
+                if (comp.types.includes('locality')) {
+                  city = comp.long_name;
+                } else if (comp.types.includes('administrative_area_level_1')) {
+                  state = comp.short_name;
+                }
+              });
+              if (city) setValue('city', city);
+              if (state) setValue('state', state);
             }
-          })
-          .catch(err => console.warn("Reverse geocode error:", err));
+          });
+        };
+
+        marker.addListener('dragend', () => {
+          const pos = marker.getPosition();
+          handleGoogleGeocode(pos.lat(), pos.lng());
+        });
+
+        map.addListener('click', (e) => {
+          marker.setPosition(e.latLng);
+          handleGoogleGeocode(e.latLng.lat(), e.latLng.lng());
+        });
+
+        // Attach Place Autocomplete to search input
+        const autocompleteInput = document.getElementById('map-search-input');
+        if (autocompleteInput) {
+          const autocomplete = new window.google.maps.places.Autocomplete(autocompleteInput);
+          autocomplete.bindTo('bounds', map);
+
+          autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry || !place.geometry.location) {
+              return;
+            }
+
+            const loc = place.geometry.location;
+            map.setCenter(loc);
+            map.setZoom(15);
+            marker.setPosition(loc);
+
+            const latVal = loc.lat();
+            const lngVal = loc.lng();
+            setValue('latitude', latVal);
+            setValue('longitude', lngVal);
+            setValue('location', place.formatted_address || place.name);
+
+            let city = '';
+            let state = '';
+            if (place.address_components) {
+              place.address_components.forEach(comp => {
+                if (comp.types.includes('locality')) {
+                  city = comp.long_name;
+                } else if (comp.types.includes('administrative_area_level_1')) {
+                  state = comp.short_name;
+                }
+              });
+            }
+            if (city) setValue('city', city);
+            if (state) setValue('state', state);
+          });
+        }
       };
 
-      marker.on('dragend', () => {
-        const pos = marker.getLatLng();
-        reverseGeocode(pos.lat, pos.lng);
-      });
+      if (!script) {
+        script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsKey}&libraries=places`;
+        script.async = true;
+        script.onload = initGoogleMap;
+        document.head.appendChild(script);
+      } else {
+        // Wait briefly for library loading if script element is already registered
+        setTimeout(initGoogleMap, 500);
+      }
+    } else {
+      // 2. Leaflet/OSM Fallback Load Path
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
 
-      map.on('click', (e) => {
-        marker.setLatLng(e.latlng);
-        reverseGeocode(e.latlng.lat, e.latlng.lng);
-      });
-    };
-    document.head.appendChild(script);
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.async = true;
+      script.onload = () => {
+        if (!window.L) return;
 
-    return () => {
-      try {
-        document.head.removeChild(link);
-        document.head.removeChild(script);
-      } catch (e) {}
-    };
+        const defaultLat = 28.6139;
+        const defaultLng = 77.2090;
+
+        const map = window.L.map('map-picker').setView([defaultLat, defaultLng], 12);
+        mapRef.current = map;
+
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = window.L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+        markerRef.current = marker;
+
+        const reverseGeocode = (latVal, lngVal) => {
+          setValue('latitude', latVal);
+          setValue('longitude', lngVal);
+
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latVal}&lon=${lngVal}`)
+            .then(res => res.json())
+            .then(resData => {
+              if (resData) {
+                setValue('location', resData.display_name || '');
+                const city = resData.address?.city || resData.address?.town || resData.address?.suburb || resData.address?.county || '';
+                const state = resData.address?.state || '';
+                setValue('city', city);
+                setValue('state', state);
+              }
+            })
+            .catch(err => console.warn("Reverse geocode error:", err));
+        };
+
+        marker.on('dragend', () => {
+          const pos = marker.getLatLng();
+          reverseGeocode(pos.lat, pos.lng);
+        });
+
+        map.on('click', (e) => {
+          marker.setLatLng(e.latlng);
+          reverseGeocode(e.latlng.lat, e.latlng.lng);
+        });
+      };
+      document.head.appendChild(script);
+
+      return () => {
+        try {
+          document.head.removeChild(link);
+          document.head.removeChild(script);
+        } catch (e) {}
+      };
+    }
   }, [register]);
 
   const handleMapSearch = async () => {
     if (!searchQuery) return;
+    const googleMapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+    if (googleMapsKey && googleMapsKey.trim() !== '' && window.google) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address: searchQuery }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const loc = results[0].geometry.location;
+          const searchLat = loc.lat();
+          const searchLng = loc.lng();
+
+          setValue('latitude', searchLat);
+          setValue('longitude', searchLng);
+          setValue('location', results[0].formatted_address);
+
+          let city = '';
+          let state = '';
+          results[0].address_components.forEach(comp => {
+            if (comp.types.includes('locality')) {
+              city = comp.long_name;
+            } else if (comp.types.includes('administrative_area_level_1')) {
+              state = comp.short_name;
+            }
+          });
+          if (city) setValue('city', city);
+          if (state) setValue('state', state);
+
+          if (mapRef.current && markerRef.current) {
+            mapRef.current.setCenter(loc);
+            mapRef.current.setZoom(15);
+            markerRef.current.setPosition(loc);
+          }
+        } else {
+          toast.error("Location search failed.");
+        }
+      });
+      return;
+    }
+
+    // Leaflet/OSM search fallback
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
       const searchData = await res.json();
