@@ -263,16 +263,22 @@ const AdminDashboard = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button 
-                            onClick={() => handleToggleUserStatus(u)}
-                            className={`p-1.5 rounded-lg border text-xs font-semibold ${
-                              u.deactivated 
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
-                                : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
-                            }`}
-                          >
-                            {u.deactivated ? <UserCheck size={14} /> : <UserMinus size={14} />}
-                          </button>
+                          {u.role === 'Admin' ? (
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider px-2 py-1 rounded bg-slate-100 dark:bg-slate-800">
+                              System
+                            </span>
+                          ) : (
+                            <button 
+                              onClick={() => handleToggleUserStatus(u)}
+                              className={`p-1.5 rounded-lg border text-xs font-semibold ${
+                                u.deactivated 
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
+                                  : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+                              }`}
+                            >
+                              {u.deactivated ? <UserCheck size={14} /> : <UserMinus size={14} />}
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
