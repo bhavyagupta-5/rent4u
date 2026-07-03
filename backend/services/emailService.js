@@ -12,18 +12,29 @@ async function sendEmail({ to, subject, html }) {
       const port = parseInt(process.env.EMAIL_PORT || '587', 10);
       const secure = process.env.EMAIL_SECURE === 'true';
 
-      const transporter = nodemailer.createTransport({
-        host: host,
-        port: port,
-        secure: secure,
-        auth: {
-          user: user,
-          pass: pass,
-        },
-        tls: {
-          rejectUnauthorized: false
-        }
-      });
+      let transporter;
+      if (host === 'smtp.gmail.com' || user.toLowerCase().endsWith('@gmail.com')) {
+        transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: user,
+            pass: pass,
+          }
+        });
+      } else {
+        transporter = nodemailer.createTransport({
+          host: host,
+          port: port,
+          secure: secure,
+          auth: {
+            user: user,
+            pass: pass,
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+      }
 
       const info = await transporter.sendMail({
         from: `"RentHour AI" <${user}>`,
