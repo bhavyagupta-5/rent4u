@@ -161,3 +161,14 @@ exports.getActivityLogs = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+exports.getListings = async (req, res) => {
+  try {
+    const listings = await RoomListing.find()
+      .populate('owner', 'name email phone')
+      .sort('-createdAt');
+    res.status(200).json({ success: true, data: listings });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
