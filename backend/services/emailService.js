@@ -5,7 +5,6 @@ function getTransporter() {
   const pass = process.env.EMAIL_PASS;
 
   if (!user || !pass) {
-    
     return {
       sendMail: async (mailOptions) => {
         console.log("=== MOCK EMAIL SENT ===");
@@ -18,12 +17,23 @@ function getTransporter() {
     };
   }
 
+  // Use customized SMTP settings if provided (useful for Render/Railway hosting), defaulting to Gmail secure SMTP.
+  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.EMAIL_PORT || '465', 10);
+  const secure = process.env.EMAIL_SECURE !== 'false'; // Default to true for port 465
+
   return nodemailer.createTransport({
-    service: 'Gmail', 
+    host: host,
+    port: port,
+    secure: secure,
     auth: {
       user: user,
       pass: pass,
     },
+    tls: {
+      // Do not fail on invalid/self-signed certs which are common in cloud host routes
+      rejectUnauthorized: false
+    }
   });
 }
 

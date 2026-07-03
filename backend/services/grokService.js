@@ -155,10 +155,29 @@ function calculateRuleBasedScore(tenantProfile, listing) {
   };
 }
 
-async function generateCompatibility(tenantProfile, listing) {
+function getGrokConfig() {
   const apiKey = process.env.GROK_API_KEY;
-  const baseUrl = process.env.GROK_BASE_URL || 'https://api.x.ai/v1';
-  const model = process.env.GROK_MODEL || 'grok-4';
+  let baseUrl = process.env.GROK_BASE_URL || 'https://api.x.ai/v1';
+  let model = process.env.GROK_MODEL || 'grok-4';
+
+  if (apiKey && apiKey.startsWith('gsk_')) {
+    if (baseUrl.includes('x.ai') || baseUrl === 'https://api.x.ai/v1') {
+      baseUrl = 'https://api.groq.com/openai/v1';
+    }
+    if (model === 'grok-4' || model === 'grok-2' || model === 'grok-beta') {
+      model = 'llama-3.3-70b-versatile';
+    }
+  } else if (apiKey) {
+    if (model === 'grok-4') {
+      model = 'grok-2-latest';
+    }
+  }
+
+  return { apiKey, baseUrl, model };
+}
+
+async function generateCompatibility(tenantProfile, listing) {
+  const { apiKey, baseUrl, model } = getGrokConfig();
 
   if (!apiKey) {
     console.warn("Grok API key not set. Using Rule-Based fallback scoring.");
@@ -233,9 +252,7 @@ Generate a JSON response only. No conversational wrapper, no markdown blocks. Th
 }
 
 async function generateListingDescription({ title, city, roomType, rent, amenities, furnishing }) {
-  const apiKey = process.env.GROK_API_KEY;
-  const baseUrl = process.env.GROK_BASE_URL || 'https://api.x.ai/v1';
-  const model = process.env.GROK_MODEL || 'grok-4';
+  const { apiKey, baseUrl, model } = getGrokConfig();
 
   const fallbackText = `Welcome to this premium ${roomType} listing in the heart of ${city}! Featuring essential features such as ${amenities || 'high-speed WiFi, modern kitchen and climate control'}, and offered at an attractive monthly rate of Rs. ${rent || '10000'} with ${furnishing || 'furnished'} settings, this space is ideal for tenants looking for a neat and peaceful room. Contact us today to coordinate a viewing walk-through!`;
 
