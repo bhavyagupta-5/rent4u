@@ -1,6 +1,40 @@
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 
+let cachedTransporter = null;
+
+function getTransporter(user, pass) {
+  if (cachedTransporter) return cachedTransporter;
+
+  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.EMAIL_PORT || '587', 10);
+  const secure = process.env.EMAIL_SECURE === 'true';
+
+  if (host === 'smtp.gmail.com' || user.toLowerCase().endsWith('@gmail.com')) {
+    cachedTransporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: user,
+        pass: pass,
+      }
+    });
+  } else {
+    cachedTransporter = nodemailer.createTransport({
+      host: host,
+      port: port,
+      secure: secure,
+      auth: {
+        user: user,
+        pass: pass,
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+  }
+  return cachedTransporter;
+}
+
 async function sendEmail({ to, subject, html }) {
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
@@ -8,33 +42,7 @@ async function sendEmail({ to, subject, html }) {
   // 1. Primary: Try plain SMTP first
   if (user && pass) {
     try {
-      const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-      const port = parseInt(process.env.EMAIL_PORT || '587', 10);
-      const secure = process.env.EMAIL_SECURE === 'true';
-
-      let transporter;
-      if (host === 'smtp.gmail.com' || user.toLowerCase().endsWith('@gmail.com')) {
-        transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: user,
-            pass: pass,
-          }
-        });
-      } else {
-        transporter = nodemailer.createTransport({
-          host: host,
-          port: port,
-          secure: secure,
-          auth: {
-            user: user,
-            pass: pass,
-          },
-          tls: {
-            rejectUnauthorized: false
-          }
-        });
-      }
+      const transporter = getTransporter(user, pass);
 
       const info = await transporter.sendMail({
         from: `"RentHour AI" <${user}>`,
