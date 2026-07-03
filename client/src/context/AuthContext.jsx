@@ -18,8 +18,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const requestInterceptor = api.interceptors.request.use(
       (config) => {
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        const currentToken = localStorage.getItem('token');
+        if (currentToken) {
+          config.headers.Authorization = `Bearer ${currentToken}`;
         }
         return config;
       },
@@ -30,7 +31,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       api.interceptors.request.eject(requestInterceptor);
     };
-  }, [token]);
+  }, []);
 
   
   useEffect(() => {
