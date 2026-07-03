@@ -45,7 +45,7 @@ async function sendEmail({ to, subject, html }) {
       const transporter = getTransporter(user, pass);
 
       const info = await transporter.sendMail({
-        from: `"RentHour AI" <${user}>`,
+        from: `"Rent4u" <${user}>`,
         to: to,
         subject: subject,
         html: html
@@ -63,7 +63,7 @@ async function sendEmail({ to, subject, html }) {
   if (process.env.RESEND_API_KEY) {
     try {
       const res = await axios.post('https://api.resend.com/emails', {
-        from: `RentHour AI <${fromEmail}>`,
+        from: `Rent4u <${fromEmail}>`,
         to: [to],
         subject: subject,
         html: html
@@ -83,10 +83,10 @@ async function sendEmail({ to, subject, html }) {
   // 3. Fallback: SendGrid API Key Integration (Port 443, safe on Render/Railway)
   if (process.env.SENDGRID_API_KEY) {
     try {
-      const fromEmailSG = process.env.EMAIL_FROM || 'no-reply@renthour-ai.com';
+      const fromEmailSG = process.env.EMAIL_FROM || 'no-reply@rent4u.com';
       const res = await axios.post('https://api.sendgrid.com/v3/mail/send', {
         personalizations: [{ to: [{ email: to }] }],
-        from: { email: fromEmailSG, name: 'RentHour AI' },
+        from: { email: fromEmailSG, name: 'Rent4u' },
         subject: subject,
         content: [{ type: 'text/html', value: html }]
       }, {
@@ -121,16 +121,16 @@ async function sendInterestReceivedEmail(ownerEmail, ownerName, tenantName, list
         <span style="font-size: 16px; color: #4b5563;">AI Compatibility Match Score:</span>
         <div style="font-size: 36px; font-weight: bold; color: #10b981; margin-top: 5px;">${compatibilityScore}%</div>
       </div>
-      <p>Log in to your RentHour AI Owner Dashboard to accept or decline this interest and start chatting!</p>
+      <p>Log in to your Rent4u Owner Dashboard to accept or decline this interest and start chatting!</p>
       <br />
       <hr style="border: 0; border-top: 1px solid #e2e8f0;" />
-      <p style="font-size: 12px; color: #9ca3af;">This is an automated notification from RentHour AI.</p>
+      <p style="font-size: 12px; color: #9ca3af;">This is an automated notification from Rent4u.</p>
     </div>
   `;
 
   return await sendEmail({
     to: ownerEmail,
-    subject: `RentHour AI: Interest Received for "${listingTitle}"!`,
+    subject: `Rent4u: Interest Received for "${listingTitle}"!`,
     html: htmlContent
   });
 }
@@ -141,17 +141,17 @@ async function sendInterestAcceptedEmail(tenantEmail, tenantName, ownerName, own
       <h2 style="color: #10b981; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Interest Request Approved! 🎉</h2>
       <p>Hi ${tenantName},</p>
       <p>Great news! The owner, <strong>${ownerName}</strong>, has accepted your interest request for: <strong>"${listingTitle}"</strong>.</p>
-      <p>You can now open the real-time chat room on RentHour AI to connect directly with the owner.</p>
+      <p>You can now open the real-time chat room on Rent4u to connect directly with the owner.</p>
       ${ownerPhone ? `<p>Owner contact number: <strong>${ownerPhone}</strong></p>` : ''}
       <br />
       <hr style="border: 0; border-top: 1px solid #e2e8f0;" />
-      <p style="font-size: 12px; color: #9ca3af;">Thank you for using RentHour AI.</p>
+      <p style="font-size: 12px; color: #9ca3af;">Thank you for using Rent4u.</p>
     </div>
   `;
 
   return await sendEmail({
     to: tenantEmail,
-    subject: `RentHour AI: Your request for "${listingTitle}" was ACCEPTED!`,
+    subject: `Rent4u: Your request for "${listingTitle}" was ACCEPTED!`,
     html: htmlContent
   });
 }
@@ -162,16 +162,16 @@ async function sendInterestDeclinedEmail(tenantEmail, tenantName, listingTitle) 
       <h2 style="color: #ef4444; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Interest Update</h2>
       <p>Hi ${tenantName},</p>
       <p>Thank you for expressing interest in <strong>"${listingTitle}"</strong>.</p>
-      <p>Unfortunately, the owner has decided to decline your request at this time. Don't worry—there are plenty of other listings matching your profile on RentHour AI. Keep searching!</p>
+      <p>Unfortunately, the owner has decided to decline your request at this time. Don't worry—there are plenty of other listings matching your profile on Rent4u. Keep searching!</p>
       <br />
       <hr style="border: 0; border-top: 1px solid #e2e8f0;" />
-      <p style="font-size: 12px; color: #9ca3af;">Thank you for using RentHour AI.</p>
+      <p style="font-size: 12px; color: #9ca3af;">Thank you for using Rent4u.</p>
     </div>
   `;
 
   return await sendEmail({
     to: tenantEmail,
-    subject: `RentHour AI: Interest update for "${listingTitle}"`,
+    subject: `Rent4u: Interest update for "${listingTitle}"`,
     html: htmlContent
   });
 }
@@ -181,7 +181,7 @@ async function sendPasswordResetEmail(userEmail, userName, resetUrl) {
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded-lg: 8px;">
       <h2 style="color: #6366f1; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Reset Your Password</h2>
       <p>Hi ${userName},</p>
-      <p>You requested to reset your password on RentHour AI. Click the link below to set a new password. This link is valid for 10 minutes:</p>
+      <p>You requested to reset your password on Rent4u. Click the link below to set a new password. This link is valid for 10 minutes:</p>
       <div style="margin: 24px 0; text-align: center;">
         <a href="${resetUrl}" style="background-color: #e65a0f; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Reset Password</a>
       </div>
@@ -194,7 +194,7 @@ async function sendPasswordResetEmail(userEmail, userName, resetUrl) {
 
   return await sendEmail({
     to: userEmail,
-    subject: `RentHour AI: Reset Your Password`,
+    subject: `Rent4u: Reset Your Password`,
     html: htmlContent
   });
 }

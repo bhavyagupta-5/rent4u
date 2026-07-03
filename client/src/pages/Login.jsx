@@ -133,43 +133,6 @@ const Login = () => {
 
         </form>
 
-        {}
-        <div className="mt-6 border-t border-slate-100 dark:border-slate-800 pt-6">
-          <p className="text-xs text-slate-400 text-center mb-3">Quick demo accounts (password: password123)</p>
-          <div className="grid grid-cols-3 gap-2">
-            <button 
-              type="button" 
-              onClick={() => {
-                document.querySelector('input[type="email"]').value = 'peter@tenant.com';
-                document.querySelector('input[type="password"]').value = 'password123';
-              }} 
-              className="text-[10px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 p-1.5 rounded-lg font-semibold truncate"
-            >
-              Tenant Peter
-            </button>
-            <button 
-              type="button" 
-              onClick={() => {
-                document.querySelector('input[type="email"]').value = 'sarah@owner.com';
-                document.querySelector('input[type="password"]').value = 'password123';
-              }} 
-              className="text-[10px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 p-1.5 rounded-lg font-semibold truncate"
-            >
-              Owner Sarah
-            </button>
-            <button 
-              type="button" 
-              onClick={() => {
-                document.querySelector('input[type="email"]').value = 'admin@renthour.com';
-                document.querySelector('input[type="password"]').value = 'password123';
-              }} 
-              className="text-[10px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 p-1.5 rounded-lg font-semibold truncate"
-            >
-              Admin Sys
-            </button>
-          </div>
-        </div>
-
       </div>
     </div>
   );

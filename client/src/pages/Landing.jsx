@@ -15,7 +15,7 @@ const Landing = () => {
                 <span className="text-lg font-extrabold text-white">R</span>
               </div>
               <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary-600 to-amber-600 bg-clip-text text-transparent">
-                RentHour AI
+                Rent4u
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -45,12 +45,12 @@ const Landing = () => {
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-6xl max-w-4xl mx-auto leading-none">
             Find the Perfect Room & Flatmate using{' '}
             <span className="bg-gradient-to-r from-primary-500 to-amber-500 bg-clip-text text-transparent text-glow">
-              RentHour AI
+              Rent4u
             </span>
           </h1>
           
           <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-            RentHour AI evaluates budget ranges, preferred locations, and lifestyle choices using the Grok API to match tenants and room listings instantly.
+            Rent4u evaluates budget ranges, preferred locations, and lifestyle choices using the Grok API to match tenants and room listings instantly.
           </p>
 
           <div className="mt-10 flex items-center justify-center gap-x-6">
@@ -116,7 +116,7 @@ const Landing = () => {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-              Why use RentHour AI?
+              Why use Rent4u?
             </h2>
             <p className="mt-4 text-base text-slate-600 dark:text-slate-400">
               Unlike traditional listings sites, we evaluate room seeker compatibility to protect your peace of mind.
@@ -126,7 +126,7 @@ const Landing = () => {
           <div className="mx-auto mt-16 max-w-5xl sm:mt-20 lg:mt-24">
             <div className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-12 sm:max-w-none sm:grid-cols-3">
               
-              {}
+              {/* Feature 1 */}
               <div className="flex flex-col items-center text-center p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 bg-white dark:bg-slate-900/50 shadow-sm hover:shadow-md transition-all duration-300">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-100 text-primary-600 dark:bg-primary-950/40 dark:text-primary-400 mb-5">
                   <Sparkles size={20} />
@@ -167,7 +167,7 @@ const Landing = () => {
       {/* 4. Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center text-slate-500 dark:text-slate-400 text-sm">
-          <p>© 2026 RentHour AI. Built with MERN Stack + Grok xAI compatibility services.</p>
+          <p>© 2026 Rent4u. Built with MERN Stack + Grok xAI compatibility services.</p>
         </div>
       </footer>
 

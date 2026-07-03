@@ -99,7 +99,7 @@ const Settings = () => {
               <CheckCircle className="text-emerald-500" size={24} />
               <div>
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Active Profile • Verified Role ({user?.role})</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">Your email {user?.email} is verified on the RentHour AI ledger.</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Your email {user?.email} is verified on the Rent4u ledger.</p>
               </div>
             </div>
           </div>

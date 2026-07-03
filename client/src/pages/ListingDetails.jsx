@@ -269,7 +269,7 @@ const ListingDetails = () => {
                       <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         {compatibility.score >= 90 ? 'Excellent Match' : compatibility.score >= 70 ? 'Good Match' : 'Potential Conflict'}
                       </h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Predicted by RentHour matching engine</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Predicted by Rent4u matching engine</p>
                     </div>
                   </div>
 

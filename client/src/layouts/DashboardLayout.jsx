@@ -100,7 +100,7 @@ const DashboardLayout = () => {
               <span className="text-lg font-extrabold text-white">R</span>
             </div>
             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary-600 to-indigo-500 bg-clip-text text-transparent">
-              RentHour AI
+              Rent4u
             </span>
           </Link>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-slate-500">
@@ -172,7 +172,7 @@ const DashboardLayout = () => {
               <Menu size={22} />
             </button>
             <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 hidden sm:block">
-              {navLinks.find(link => location.pathname === link.path)?.name || 'RentHour AI'}
+              {navLinks.find(link => location.pathname === link.path)?.name || 'Rent4u'}
             </h1>
           </div>
 
