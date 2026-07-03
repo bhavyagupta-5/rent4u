@@ -1,28 +1,69 @@
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
-function getTransporter() {
+async function sendEmail({ to, subject, html }) {
+  // 1. Resend API Key Integration (Port 443, safe on Render/Railway)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+      const res = await axios.post('https://api.resend.com/emails', {
+        from: `RentHour AI <${fromEmail}>`,
+        to: [to],
+        subject: subject,
+        html: html
+      }, {
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log("Email sent successfully via Resend API:", res.data.id);
+      return res.data;
+    } catch (err) {
+      console.error("Resend API failed, falling back to SMTP. Error:", err.response?.data || err.message);
+    }
+  }
+
+  // 2. SendGrid API Key Integration (Port 443, safe on Render/Railway)
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      const fromEmail = process.env.EMAIL_FROM || 'no-reply@renthour-ai.com';
+      const res = await axios.post('https://api.sendgrid.com/v3/mail/send', {
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: fromEmail, name: 'RentHour AI' },
+        subject: subject,
+        content: [{ type: 'text/html', value: html }]
+      }, {
+        headers: {
+          'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log("Email sent successfully via SendGrid API");
+      return res.data;
+    } catch (err) {
+      console.error("SendGrid API failed, falling back to SMTP. Error:", err.response?.data || err.message);
+    }
+  }
+
+  // 3. Fallback: SMTP / Mock
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
 
   if (!user || !pass) {
-    return {
-      sendMail: async (mailOptions) => {
-        console.log("=== MOCK EMAIL SENT ===");
-        console.log(`To: ${mailOptions.to}`);
-        console.log(`Subject: ${mailOptions.subject}`);
-        console.log(`Body (HTML length): ${mailOptions.html.length}`);
-        console.log("=======================");
-        return { messageId: 'mock-id-' + Date.now() };
-      }
-    };
+    console.log("=== MOCK EMAIL SENT ===");
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Body (HTML length): ${html.length}`);
+    console.log("=======================");
+    return { messageId: 'mock-id-' + Date.now() };
   }
 
-  // Use customized SMTP settings if provided (useful for Render/Railway hosting), defaulting to Gmail secure SMTP.
   const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.EMAIL_PORT || '465', 10);
-  const secure = process.env.EMAIL_SECURE !== 'false'; // Default to true for port 465
+  const secure = process.env.EMAIL_SECURE !== 'false';
 
-  return nodemailer.createTransport({
+  const transporter = nodemailer.createTransport({
     host: host,
     port: port,
     secure: secure,
@@ -31,14 +72,19 @@ function getTransporter() {
       pass: pass,
     },
     tls: {
-      // Do not fail on invalid/self-signed certs which are common in cloud host routes
       rejectUnauthorized: false
     }
+  });
+
+  return await transporter.sendMail({
+    from: `"RentHour AI" <${user}>`,
+    to: to,
+    subject: subject,
+    html: html
   });
 }
 
 async function sendInterestReceivedEmail(ownerEmail, ownerName, tenantName, listingTitle, compatibilityScore) {
-  const transporter = getTransporter();
   const htmlContent = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded-lg: 8px;">
       <h2 style="color: #6366f1; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">New Tenant Interest Received!</h2>
@@ -55,16 +101,14 @@ async function sendInterestReceivedEmail(ownerEmail, ownerName, tenantName, list
     </div>
   `;
 
-  return await transporter.sendMail({
-    from: `"RentHour AI" <${process.env.EMAIL_USER || 'no-reply@renthour-ai.com'}>`,
+  return await sendEmail({
     to: ownerEmail,
     subject: `RentHour AI: Interest Received for "${listingTitle}"!`,
-    html: htmlContent,
+    html: htmlContent
   });
 }
 
 async function sendInterestAcceptedEmail(tenantEmail, tenantName, ownerName, ownerPhone, listingTitle) {
-  const transporter = getTransporter();
   const htmlContent = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded-lg: 8px;">
       <h2 style="color: #10b981; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Interest Request Approved! 🎉</h2>
@@ -78,16 +122,14 @@ async function sendInterestAcceptedEmail(tenantEmail, tenantName, ownerName, own
     </div>
   `;
 
-  return await transporter.sendMail({
-    from: `"RentHour AI" <${process.env.EMAIL_USER || 'no-reply@renthour-ai.com'}>`,
+  return await sendEmail({
     to: tenantEmail,
     subject: `RentHour AI: Your request for "${listingTitle}" was ACCEPTED!`,
-    html: htmlContent,
+    html: htmlContent
   });
 }
 
 async function sendInterestDeclinedEmail(tenantEmail, tenantName, listingTitle) {
-  const transporter = getTransporter();
   const htmlContent = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded-lg: 8px;">
       <h2 style="color: #ef4444; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Interest Update</h2>
@@ -100,16 +142,14 @@ async function sendInterestDeclinedEmail(tenantEmail, tenantName, listingTitle) 
     </div>
   `;
 
-  return await transporter.sendMail({
-    from: `"RentHour AI" <${process.env.EMAIL_USER || 'no-reply@renthour-ai.com'}>`,
+  return await sendEmail({
     to: tenantEmail,
     subject: `RentHour AI: Interest update for "${listingTitle}"`,
-    html: htmlContent,
+    html: htmlContent
   });
 }
 
 async function sendPasswordResetEmail(userEmail, userName, resetUrl) {
-  const transporter = getTransporter();
   const htmlContent = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded-lg: 8px;">
       <h2 style="color: #6366f1; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Reset Your Password</h2>
@@ -125,11 +165,10 @@ async function sendPasswordResetEmail(userEmail, userName, resetUrl) {
     </div>
   `;
 
-  return await transporter.sendMail({
-    from: `"RentHour AI" <${process.env.EMAIL_USER || 'no-reply@renthour-ai.com'}>`,
+  return await sendEmail({
     to: userEmail,
     subject: `RentHour AI: Reset Your Password`,
-    html: htmlContent,
+    html: htmlContent
   });
 }
 
