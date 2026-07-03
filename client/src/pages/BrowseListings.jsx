@@ -3,6 +3,7 @@ import { api, useAuth } from '../context/AuthContext';
 import { MapPin, DollarSign, Sparkles, Filter, SlidersHorizontal, Map, Grid, RefreshCw, X, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useSocket } from '../context/SocketContext';
 
 const BrowseListings = () => {
   const { user } = useAuth();
@@ -140,6 +141,20 @@ const BrowseListings = () => {
     fetchRooms();
     fetchSavedIds();
   }, [sort, roomType, furnishing, amenities]);
+
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (socket) {
+      const handleNewListing = () => {
+        fetchRooms(1, false);
+      };
+      socket.on('new_listing', handleNewListing);
+      return () => {
+        socket.off('new_listing', handleNewListing);
+      };
+    }
+  }, [socket]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();

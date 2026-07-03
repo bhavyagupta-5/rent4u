@@ -50,6 +50,13 @@ exports.sendInterest = async (req, res) => {
       console.error("Nodemailer failed in sendInterest (background):", mailError.message);
     });
 
+    try {
+      const { sendToUser } = require('../services/socketService');
+      sendToUser(listing.owner._id.toString(), 'new_interest', { interestId: interest._id });
+    } catch (e) {
+      console.warn("Socket notification failed in sendInterest:", e.message);
+    }
+
     res.status(201).json({ success: true, data: interest });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -109,6 +116,13 @@ exports.updateInterestStatus = async (req, res) => {
       ).catch(mailErr => {
         console.error("Mail dispatch failed in updateInterestStatus (declined background):", mailErr.message);
       });
+    }
+
+    try {
+      const { sendToUser } = require('../services/socketService');
+      sendToUser(interest.tenant._id.toString(), 'interest_update', { interestId: interest._id, status });
+    } catch (e) {
+      console.warn("Socket notification failed in updateInterestStatus:", e.message);
     }
 
     res.status(200).json({ success: true, data: interest });

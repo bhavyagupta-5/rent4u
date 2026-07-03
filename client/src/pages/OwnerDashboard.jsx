@@ -4,9 +4,11 @@ import { api, useAuth } from '../context/AuthContext';
 import { Home, FileText, Check, X, Sparkles, Plus, Trash2, Edit, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import UserAvatar from '../components/Common/UserAvatar';
+import { useSocket } from '../context/SocketContext';
 
 const OwnerDashboard = () => {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [listings, setListings] = useState([]);
   const [interests, setInterests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,20 +17,14 @@ const OwnerDashboard = () => {
     try {
       setLoading(true);
       
-      
-      
-      
       const listingsRes = await api.get('/listings');
       if (listingsRes.data.success) {
-        
         const owned = listingsRes.data.data.filter(l => l.owner._id === user._id);
         setListings(owned);
       }
 
-      
       const interestRes = await api.get('/interest');
       if (interestRes.data.success) {
-        
         setInterests(interestRes.data.data);
       }
     } catch (err) {
@@ -41,6 +37,19 @@ const OwnerDashboard = () => {
   useEffect(() => {
     fetchOwnerData();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      const handleNewInterest = () => {
+        toast.success("New tenant interest request received!");
+        fetchOwnerData();
+      };
+      socket.on('new_interest', handleNewInterest);
+      return () => {
+        socket.off('new_interest', handleNewInterest);
+      };
+    }
+  }, [socket]);
 
   const handleInterestDecision = async (interestId, decision) => {
     try {

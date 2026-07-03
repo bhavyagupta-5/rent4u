@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api, useAuth } from '../context/AuthContext';
 import { Sparkles, MapPin, Compass, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useSocket } from '../context/SocketContext';
 
 const getDistanceKm = (lat1, lon1, lat2, lon2) => {
   if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return null;
@@ -51,81 +52,98 @@ const TenantDashboard = () => {
     }
   }, [tenantProfile]);
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        
-        
-        const listRes = await api.get('/listings?limit=6');
-        const availableRooms = listRes.data.data;
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      const listRes = await api.get('/listings?limit=6');
+      const availableRooms = listRes.data.data;
 
-        let roomsWithScores = [];
+      let roomsWithScores = [];
 
-        
-        if (tenantProfile && tenantProfile.preferredLocation !== 'Not specified yet') {
-          roomsWithScores = await Promise.all(availableRooms.map(async (room) => {
-            const distance = coords ? getDistanceKm(coords.latitude, coords.longitude, room.latitude, room.longitude) : null;
-            try {
-              const compRes = await api.get(`/compatibility/${room._id}`);
-              return {
-                ...room,
-                distance,
-                compatibility: compRes.data.data
-              };
-            } catch (err) {
-              return {
-                ...room,
-                distance,
-                compatibility: null
-              };
-            }
-          }));
-
-          
-          roomsWithScores.sort((a, b) => {
-            const scoreA = a.compatibility ? a.compatibility.score : 0;
-            const scoreB = b.compatibility ? b.compatibility.score : 0;
-            return scoreB - scoreA;
-          });
-        } else {
-          
-          roomsWithScores = availableRooms.map((room) => {
-            const dist = coords ? getDistanceKm(coords.latitude, coords.longitude, room.latitude, room.longitude) : null;
+      if (tenantProfile && tenantProfile.preferredLocation !== 'Not specified yet') {
+        roomsWithScores = await Promise.all(availableRooms.map(async (room) => {
+          const distance = coords ? getDistanceKm(coords.latitude, coords.longitude, room.latitude, room.longitude) : null;
+          try {
+            const compRes = await api.get(`/compatibility/${room._id}`);
             return {
               ...room,
-              distance: dist,
+              distance,
+              compatibility: compRes.data.data
+            };
+          } catch (err) {
+            return {
+              ...room,
+              distance,
               compatibility: null
             };
-          });
-
-          
-          if (coords) {
-            roomsWithScores.sort((a, b) => (a.distance ?? 999999) - (b.distance ?? 999999));
           }
-        }
+        }));
 
-        setListings(roomsWithScores);
+        roomsWithScores.sort((a, b) => {
+          const scoreA = a.compatibility ? a.compatibility.score : 0;
+          const scoreB = b.compatibility ? b.compatibility.score : 0;
+          return scoreB - scoreA;
+        });
+      } else {
+        roomsWithScores = availableRooms.map((room) => {
+          const dist = coords ? getDistanceKm(coords.latitude, coords.longitude, room.latitude, room.longitude) : null;
+          return {
+            ...room,
+            distance: dist,
+            compatibility: null
+          };
+        });
 
-        
-        const intRes = await api.get('/interest');
-        if (intRes.data.success) {
-          const list = intRes.data.data;
-          setStats({
-            total: list.length,
-            pending: list.filter(i => i.status === 'pending').length,
-            accepted: list.filter(i => i.status === 'accepted').length,
-          });
+        if (coords) {
+          roomsWithScores.sort((a, b) => (a.distance ?? 999999) - (b.distance ?? 999999));
         }
-      } catch (error) {
-        console.error("Failed to load tenant dashboard data:", error.message);
-      } finally {
-        setLoading(false);
       }
-    };
 
-    loadDashboardData();
+      setListings(roomsWithScores);
+
+      const intRes = await api.get('/interest');
+      if (intRes.data.success) {
+        const list = intRes.data.data;
+        setStats({
+          total: list.length,
+          pending: list.filter(i => i.status === 'pending').length,
+          accepted: list.filter(i => i.status === 'accepted').length,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load tenant dashboard data:", error.message);
+    } finally {
+      setLoading(false);
+    }
   }, [tenantProfile, coords]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (socket) {
+      const handleNewListing = () => {
+        loadDashboardData();
+      };
+      
+      const handleInterestUpdate = (data) => {
+        toast.success(`Your flatmate application status is now: ${data.status.toUpperCase()}!`);
+        loadDashboardData();
+      };
+
+      socket.on('new_listing', handleNewListing);
+      socket.on('interest_update', handleInterestUpdate);
+
+      return () => {
+        socket.off('new_listing', handleNewListing);
+        socket.off('interest_update', handleInterestUpdate);
+      };
+    }
+  }, [socket, loadDashboardData]);
 
   const handleToggleWishlist = async (listingId) => {
     try {

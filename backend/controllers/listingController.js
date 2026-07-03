@@ -147,6 +147,16 @@ exports.createListing = async (req, res) => {
 
     const listing = await RoomListing.create(req.body);
 
+    try {
+      const { getIO } = require('../services/socketService');
+      const io = getIO();
+      if (io) {
+        io.emit('new_listing', { listingId: listing._id });
+      }
+    } catch (e) {
+      console.warn("Socket broadcast failed in createListing:", e.message);
+    }
+
     res.status(201).json({ success: true, data: listing });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
