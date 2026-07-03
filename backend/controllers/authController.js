@@ -38,10 +38,11 @@ exports.register = async (req, res) => {
     const refreshToken = generateRefreshToken(user._id);
 
     
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
 
@@ -92,10 +93,11 @@ exports.login = async (req, res) => {
     const refreshToken = generateRefreshToken(user._id);
 
     
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
 
@@ -119,8 +121,11 @@ exports.login = async (req, res) => {
 
 exports.logout = async (req, res) => {
   try {
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('refreshToken', '', {
       httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       expires: new Date(0),
     });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
