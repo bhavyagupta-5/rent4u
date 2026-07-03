@@ -9,8 +9,8 @@ async function sendEmail({ to, subject, html }) {
   if (user && pass) {
     try {
       const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-      const port = parseInt(process.env.EMAIL_PORT || '465', 10);
-      const secure = process.env.EMAIL_SECURE !== 'false';
+      const port = parseInt(process.env.EMAIL_PORT || '587', 10);
+      const secure = process.env.EMAIL_SECURE === 'true';
 
       const transporter = nodemailer.createTransport({
         host: host,
