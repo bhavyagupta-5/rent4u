@@ -13,7 +13,7 @@ const ChatPage = () => {
     typingUsers, 
     activeConversationId, 
     setActiveConversationId 
-  } = useSocket();
+  } = useSocket() || {};
 
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);

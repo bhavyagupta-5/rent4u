@@ -163,7 +163,7 @@ const AdminDashboard = () => {
                     <span className="text-xs font-semibold text-slate-400 uppercase">Conversations</span>
                     <MessageSquare className="text-emerald-500" size={18} />
                   </div>
-                  <p className="text-2xl font-black mt-2">{stats.chats}</p>
+                  <p className="text-2xl font-black mt-2">{stats.chats.total}</p>
                   <p className="text-[10px] text-slate-400 mt-1">{stats.interests.accepted} Matches Completed</p>
                 </div>
 

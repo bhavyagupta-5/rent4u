@@ -27,7 +27,7 @@ import {
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
-  const { notifications, setNotifications } = useSocket();
+  const { notifications = [], setNotifications = () => {} } = useSocket() || {};
   const { darkMode, toggleTheme } = useContext(ThemeContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);

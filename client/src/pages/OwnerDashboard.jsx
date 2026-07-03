@@ -8,7 +8,7 @@ import { useSocket } from '../context/SocketContext';
 
 const OwnerDashboard = () => {
   const { user } = useAuth();
-  const { socket } = useSocket();
+  const { socket } = useSocket() || {};
   const [listings, setListings] = useState([]);
   const [interests, setInterests] = useState([]);
   const [loading, setLoading] = useState(true);
