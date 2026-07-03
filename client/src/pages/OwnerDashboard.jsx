@@ -17,10 +17,9 @@ const OwnerDashboard = () => {
     try {
       setLoading(true);
       
-      const listingsRes = await api.get('/listings');
+      const listingsRes = await api.get(`/listings?owner=${user._id}`);
       if (listingsRes.data.success) {
-        const owned = listingsRes.data.data.filter(l => l.owner._id === user._id);
-        setListings(owned);
+        setListings(listingsRes.data.data);
       }
 
       const interestRes = await api.get('/interest');

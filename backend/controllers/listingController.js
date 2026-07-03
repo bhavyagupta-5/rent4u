@@ -21,7 +21,20 @@ exports.getListings = async (req, res) => {
       limit = 10 
     } = req.query;
 
-    const query = { status: 'available' };
+    const query = {};
+
+    if (req.query.status) {
+      query.status = req.query.status;
+    } else if (req.query.owner) {
+      // Return all listings (both available and filled) for owner requests
+      query.owner = req.query.owner;
+    } else {
+      query.status = 'available';
+    }
+
+    if (req.query.owner && !query.owner) {
+      query.owner = req.query.owner;
+    }
 
     
     if (search) {
