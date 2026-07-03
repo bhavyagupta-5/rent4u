@@ -2,14 +2,28 @@ const nodemailer = require('nodemailer');
 const axios = require('axios');
 
 async function sendEmail({ to, subject, html }) {
+  let recipient = to;
+  let emailSubject = subject;
+  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+
+  // Resend Sandbox limitation workaround: if using onboarding@resend.dev, 
+  // you can only send to the verified dashboard email.
+  if (fromEmail === 'onboarding@resend.dev' && process.env.RESEND_API_KEY) {
+    const verifiedEmail = process.env.VERIFIED_TEST_EMAIL || 'bhavyagupta561@gmail.com';
+    if (to.toLowerCase() !== verifiedEmail.toLowerCase()) {
+      console.log(`[Resend Sandbox] Redirecting mail from ${to} to verified address ${verifiedEmail} to prevent 403 restriction.`);
+      recipient = verifiedEmail;
+      emailSubject = `[Test Redirected from ${to}] ${subject}`;
+    }
+  }
+
   // 1. Resend API Key Integration (Port 443, safe on Render/Railway)
   if (process.env.RESEND_API_KEY) {
     try {
-      const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
       const res = await axios.post('https://api.resend.com/emails', {
         from: `RentHour AI <${fromEmail}>`,
-        to: [to],
-        subject: subject,
+        to: [recipient],
+        subject: emailSubject,
         html: html
       }, {
         headers: {
