@@ -1,4 +1,4 @@
-# RentHour AI: System Design Write-Up
+# Rent4u: System Design Write-Up
 
 ## 1. Compatibility Scoring Design
 The compatibility engine calculates match quality between a `TenantProfile` and a `RoomListing` on a scale from 0 to 100. Rather than performing heavy, runtime calculations on every query, scores are calculated asynchronously upon first search/details fetch and persisted in the `Compatibility` collection. 
@@ -22,8 +22,8 @@ Real-time chat is built on a custom event-driven WebSocket layer utilizing `Sock
 * **Channel Scoping:** A `Conversation` is created and bound to a specific listing after the owner clicks "Accept" on a tenant's interest request. This scopes the room strictly to that transaction context.
 * **Socket Lifecycles:** When clients log in, they connect to the socket namespace and join a dynamic channel identified by their `Conversation._id`.
 * **User Status Tracking:** An active registry mapping user IDs to socket IDs is maintained in-memory on the server to broadcast status notifications:
-  * `join_conversation` & `mark_seen`: Emits updates on message seen receipts and updates database flags.
-  * `typing` & `stop_typing`: Emits real-time typing bubbles to the partner user.
+* `join_conversation` & `mark_seen`: Emits updates on message seen receipts and updates database flags.
+* `typing` & `stop_typing`: Emits real-time typing bubbles to the partner user.
 * **Persistence:** Messages are immediately saved to the `Message` collection before broadcasting to the channel, ensuring chat history persists even if a user goes offline.
 
 ---
