@@ -1,0 +1,215 @@
+{
+  "info": {
+    "_postman_id": "7b8df991-c0bc-49a0-ad82-6ad88a660770",
+    "name": "RentHour AI API Collection",
+    "description": "API collection for testing RentHour AI MERN application endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@tenant.com\",\n  \"password\": \"password123\",\n  \"phone\": \"+15551112222\",\n  \"role\": \"Tenant\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@tenant.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{BASE_URL}}/auth/logout",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/me",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Listings",
+      "item": [
+        {
+          "name": "Get All Listings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/listings?city=Queens&roomType=Single",
+              "host": ["{{BASE_URL}}"],
+              "path": ["listings"],
+              "query": [
+                { "key": "city", "value": "Queens" },
+                { "key": "roomType", "value": "Single" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Listing Details By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/listings/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["listings", ":id"],
+              "variable": [
+                { "key": "id", "value": "listing_id_here" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Toggle Saved Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/listings/:id/wishlist",
+              "host": ["{{BASE_URL}}"],
+              "path": ["listings", ":id", "wishlist"],
+              "variable": [
+                { "key": "id", "value": "listing_id_here" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Compatibility",
+      "item": [
+        {
+          "name": "Calculate AI Match Score",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/compatibility/:listingId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["compatibility", ":listingId"],
+              "variable": [
+                { "key": "listingId", "value": "listing_id_here" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Interests",
+      "item": [
+        {
+          "name": "Send Room Application Interest",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"listingId\": \"listing_id_here\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/interest",
+              "host": ["{{BASE_URL}}"],
+              "path": ["interest"]
+            }
+          }
+        },
+        {
+          "name": "Update Interest Status (Accept/Decline)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/interest/:id",
+              "host": ["{{BASE_URL}}"],
+              "path": ["interest", ":id"],
+              "variable": [
+                { "key": "id", "value": "interest_id_here" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "ACCESS_TOKEN", "value": "paste_jwt_token_here", "type": "string" }
+  ]
+}

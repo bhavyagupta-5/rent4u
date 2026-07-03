@@ -1,0 +1,17 @@
+{
+  "name": "renthour-ai-root",
+  "version": "1.0.0",
+  "description": "RentHour AI - Flatmate and Room Compatibility Platform",
+  "main": "server.js",
+  "scripts": {
+    "install-all": "npm install && npm install --prefix backend && npm install --prefix client",
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix client\"",
+    "backend": "npm run dev --prefix backend",
+    "client": "npm run dev --prefix client",
+    "seed": "npm run seed --prefix backend",
+    "test": "npm run test --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

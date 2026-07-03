@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: renthour_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - renthour_network
+
+  backend:
+    build: ./backend
+    container_name: renthour_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://mongodb:27017/renthour_ai
+      - JWT_SECRET=super_secret_access_key_1234
+      - JWT_REFRESH_SECRET=super_secret_refresh_key_5678
+      - CLIENT_URL=http://localhost
+    depends_on:
+      - mongodb
+    networks:
+      - renthour_network
+
+  client:
+    build: ./client
+    container_name: renthour_client
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - renthour_network
+
+volumes:
+  mongo_data:
+
+networks:
+  renthour_network:
+    driver: bridge

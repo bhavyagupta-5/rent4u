@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#FAF7F2] text-slate-800 transition-colors duration-300 font-sans antialiased overflow-x-hidden;
+  }
+  body.dark {
+    @apply bg-darkBg-dark text-slate-100;
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism Styles */
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg shadow-slate-100/50;
+  }
+  
+  .dark .glass-panel {
+    @apply bg-slate-900/60 backdrop-blur-md border border-slate-800/50 shadow-none;
+  }
+  
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-sm border border-white/30 shadow-sm hover:shadow-md hover:border-white/50 transition-all duration-300;
+  }
+
+  .dark .glass-card {
+    @apply bg-slate-900/30 backdrop-blur-sm border border-slate-800/40 shadow-none hover:bg-slate-900/40 hover:border-slate-800/60 transition-all duration-300;
+  }
+  
+  .glass-input {
+    @apply bg-white/50 border border-slate-200 focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none rounded-xl px-4 py-2.5 transition-all duration-200;
+  }
+  
+  .dark .glass-input {
+    @apply bg-slate-950/40 border border-slate-800 focus:bg-slate-950/80 focus:border-primary-500 focus:ring-2 focus:ring-primary-950 outline-none rounded-xl px-4 py-2.5 transition-all duration-200;
+  }
+
+  /* Custom Glow Effects */
+  .text-glow {
+    text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+  }
+  
+  .neon-glow {
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
+  }
+
+  /* Custom Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-slate-800 rounded-full hover:bg-slate-700 transition-colors;
+  }
+}
