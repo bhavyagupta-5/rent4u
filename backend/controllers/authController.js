@@ -228,11 +228,12 @@ exports.getMe = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, phone, avatar, ...profileDetails } = req.body;
+    const { name, phone, avatar, password, ...profileDetails } = req.body;
 
     const user = await User.findById(req.user.id);
     if (name) user.name = name;
     if (phone) user.phone = phone;
+    if (password) user.password = password;
 
     let avatarUrl = avatar;
     if (req.file) {
