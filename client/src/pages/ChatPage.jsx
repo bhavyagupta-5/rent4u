@@ -211,7 +211,12 @@ const ChatPage = () => {
                         </span>
                       )}
                     </div>
-                    <p className={`text-[10px] truncate ${isSelected ? 'text-primary-100' : 'text-slate-400'}`}>
+                    {conv.listing && (
+                      <span className={`block text-[9px] font-bold truncate ${isSelected ? 'text-primary-100/90' : 'text-primary-600 dark:text-primary-400'}`}>
+                        🏡 {conv.listing.title}
+                      </span>
+                    )}
+                    <p className={`text-[10px] truncate mt-0.5 ${isSelected ? 'text-primary-200' : 'text-slate-400'}`}>
                       {conv.lastMessage?.text || 'No messages yet'}
                     </p>
                   </div>
