@@ -2,9 +2,45 @@ const nodemailer = require('nodemailer');
 const axios = require('axios');
 
 async function sendEmail({ to, subject, html }) {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+
+  // 1. Primary: Try plain SMTP first
+  if (user && pass) {
+    try {
+      const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+      const port = parseInt(process.env.EMAIL_PORT || '465', 10);
+      const secure = process.env.EMAIL_SECURE !== 'false';
+
+      const transporter = nodemailer.createTransport({
+        host: host,
+        port: port,
+        secure: secure,
+        auth: {
+          user: user,
+          pass: pass,
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+
+      const info = await transporter.sendMail({
+        from: `"RentHour AI" <${user}>`,
+        to: to,
+        subject: subject,
+        html: html
+      });
+      console.log("Email sent successfully via plain SMTP:", info.messageId);
+      return info;
+    } catch (smtpErr) {
+      console.error("Plain SMTP failed, falling back to API providers. Error:", smtpErr.message);
+    }
+  }
+
   const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
-  // 1. Resend API Key Integration (Port 443, safe on Render/Railway)
+  // 2. Fallback: Resend API Key Integration (Port 443, safe on Render/Railway)
   if (process.env.RESEND_API_KEY) {
     try {
       const res = await axios.post('https://api.resend.com/emails', {
@@ -21,17 +57,17 @@ async function sendEmail({ to, subject, html }) {
       console.log("Email sent successfully via Resend API:", res.data.id);
       return res.data;
     } catch (err) {
-      console.error("Resend API failed, falling back to SMTP. Error:", err.response?.data || err.message);
+      console.error("Resend API fallback failed. Error:", err.response?.data || err.message);
     }
   }
 
-  // 2. SendGrid API Key Integration (Port 443, safe on Render/Railway)
+  // 3. Fallback: SendGrid API Key Integration (Port 443, safe on Render/Railway)
   if (process.env.SENDGRID_API_KEY) {
     try {
-      const fromEmail = process.env.EMAIL_FROM || 'no-reply@renthour-ai.com';
+      const fromEmailSG = process.env.EMAIL_FROM || 'no-reply@renthour-ai.com';
       const res = await axios.post('https://api.sendgrid.com/v3/mail/send', {
         personalizations: [{ to: [{ email: to }] }],
-        from: { email: fromEmail, name: 'RentHour AI' },
+        from: { email: fromEmailSG, name: 'RentHour AI' },
         subject: subject,
         content: [{ type: 'text/html', value: html }]
       }, {
@@ -43,46 +79,17 @@ async function sendEmail({ to, subject, html }) {
       console.log("Email sent successfully via SendGrid API");
       return res.data;
     } catch (err) {
-      console.error("SendGrid API failed, falling back to SMTP. Error:", err.response?.data || err.message);
+      console.error("SendGrid API fallback failed. Error:", err.response?.data || err.message);
     }
   }
 
-  // 3. Fallback: SMTP / Mock
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
-
-  if (!user || !pass) {
-    console.log("=== MOCK EMAIL SENT ===");
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body (HTML length): ${html.length}`);
-    console.log("=======================");
-    return { messageId: 'mock-id-' + Date.now() };
-  }
-
-  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.EMAIL_PORT || '465', 10);
-  const secure = process.env.EMAIL_SECURE !== 'false';
-
-  const transporter = nodemailer.createTransport({
-    host: host,
-    port: port,
-    secure: secure,
-    auth: {
-      user: user,
-      pass: pass,
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-
-  return await transporter.sendMail({
-    from: `"RentHour AI" <${user}>`,
-    to: to,
-    subject: subject,
-    html: html
-  });
+  // 4. Mock Fallback
+  console.log("=== MOCK EMAIL SENT ===");
+  console.log(`To: ${to}`);
+  console.log(`Subject: ${subject}`);
+  console.log(`Body (HTML length): ${html.length}`);
+  console.log("=======================");
+  return { messageId: 'mock-id-' + Date.now() };
 }
 
 async function sendInterestReceivedEmail(ownerEmail, ownerName, tenantName, listingTitle, compatibilityScore) {
