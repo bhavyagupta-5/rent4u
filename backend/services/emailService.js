@@ -6,9 +6,9 @@ async function sendEmail({ to, subject, html }) {
   let emailSubject = subject;
   const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
-  // Resend Sandbox limitation workaround: if using onboarding@resend.dev, 
-  // you can only send to the verified dashboard email.
-  if (fromEmail === 'onboarding@resend.dev' && process.env.RESEND_API_KEY) {
+  // Resend Sandbox limitation workaround: redirect non-verified recipients
+  // to your registered testing email to prevent 403 errors during sandbox testing.
+  if (process.env.RESEND_API_KEY && process.env.RESEND_SANDBOX !== 'false') {
     const verifiedEmail = process.env.VERIFIED_TEST_EMAIL || 'bhavyagupta561@gmail.com';
     if (to.toLowerCase() !== verifiedEmail.toLowerCase()) {
       console.log(`[Resend Sandbox] Redirecting mail from ${to} to verified address ${verifiedEmail} to prevent 403 restriction.`);
